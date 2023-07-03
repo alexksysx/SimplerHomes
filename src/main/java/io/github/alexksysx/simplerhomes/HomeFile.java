@@ -1,12 +1,14 @@
-package io.github.spaery.simplerhomes;
+package io.github.alexksysx.simplerhomes;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -28,20 +30,20 @@ public class HomeFile {
     public void setHome(Player pl, String homeName){
         Location loc = pl.getLocation();
         String configPath = pl.getDisplayName() + "." + homeName;
-        int i = 0;
+
         // Checks to ensure home limit is not reached.
-        // home limit is set the the config.yml
-        if (homes.getConfigurationSection(pl.getDisplayName()) != null){
-            for (String key : homes.getConfigurationSection(pl.getDisplayName()).getKeys(false)){
-                i++;
-                if(key.equals(homeName)){
-                    throw new ArithmeticException();
-                }
-                if(i >= instance.getConfig().getInt("NumberOfHomes")){
-                    throw new IllegalStateException();
-                } else {
-                    continue;
-                }
+        // home limit is set in the config.yml
+        ConfigurationSection configurationSection = homes.getConfigurationSection(pl.getDisplayName());
+        if (configurationSection != null){
+            Set<String> keys = configurationSection.getKeys(false);
+            if (keys.contains(homeName)) {
+                pl.sendMessage("Home '" + homeName + "' already exists");
+                return;
+            }
+            int numberOfHomesLimit = instance.getConfig().getInt("NumberOfHomes");
+            if (keys.size() >= numberOfHomesLimit) {
+                pl.sendMessage("You have reached the maximum number of homes. Limit is " + numberOfHomesLimit);
+                return;
             }
         }
         homes.set(configPath + ".World", pl.getWorld().getName());
@@ -50,7 +52,7 @@ public class HomeFile {
         homes.set(configPath + ".Z",loc.getZ());
         homes.set(configPath + ".Yaw",loc.getYaw());
         homes.set(configPath + ".Pitch",loc.getPitch());
-        pl.sendMessage("Home '" + homeName + "' was sucessfully created.");
+        pl.sendMessage("Home '" + homeName + "' was successfully created.");
         pl.playSound(pl.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, (float) 0.5, (float) 1.5);
         saveFile(homesFile);
     }
@@ -59,12 +61,13 @@ public class HomeFile {
      * @param pl the player sending the command
      */
     public void homes(Player pl){
-        String homesList = new String();
+        StringBuilder homesList = new StringBuilder();
         if (homes.getConfigurationSection(pl.getDisplayName()) != null){
-            for (String key : homes.getConfigurationSection(pl.getDisplayName()).getKeys(false)){
-                homesList = homesList + key + " ";
+            Set<String> keys = homes.getConfigurationSection(pl.getDisplayName()).getKeys(false);
+            for (String key : keys){
+                homesList.append(key).append(" ");
             }
-            pl.sendMessage(homesList);
+            pl.sendMessage(homesList.toString());
         } else{
             pl.sendMessage("You have no homes.");
         }
@@ -84,11 +87,12 @@ public class HomeFile {
                 homes.getDouble(configPath + ".Z"),
                 (float) homes.getDouble(configPath + ".Yaw"),
                 (float) homes.getDouble(configPath + ".Pitch"));
-            Bukkit.getScheduler().runTaskTimer(instance, new Consumer<BukkitTask>(){
+            Bukkit.getScheduler().runTaskTimer(instance, new Consumer<>() {
                 int i = instance.getConfig().getInt("TimeToWait");
+
                 @Override
-                public void accept(BukkitTask task){
-                    if(i <= 0){
+                public void accept(BukkitTask task) {
+                    if (i <= 0) {
                         pl.teleport(loc);
                         task.cancel();
                     } else {

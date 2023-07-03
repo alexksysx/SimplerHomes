@@ -1,5 +1,6 @@
-package io.github.spaery.simplerhomes;
+package io.github.alexksysx.simplerhomes.commands;
 
+import io.github.alexksysx.simplerhomes.HomeFile;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -9,8 +10,7 @@ public class Homes implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(sender instanceof Player){
-            Player player = (Player) sender;
+        if(sender instanceof Player player){
             HomeFile h = new HomeFile();
             h.homes(player);
         } else {

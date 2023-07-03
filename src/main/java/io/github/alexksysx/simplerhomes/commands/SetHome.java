@@ -1,23 +1,20 @@
-package io.github.spaery.simplerhomes;
+package io.github.alexksysx.simplerhomes.commands;
 
+import io.github.alexksysx.simplerhomes.HomeFile;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class Home implements CommandExecutor {
+public class SetHome implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(sender instanceof Player){
+        if(sender instanceof Player player){
             if(args.length > 1) return false;
-            Player player = (Player) sender;
             HomeFile h = new HomeFile();
-            try {
-                h.home(player, args[0]);
-            } catch (ArrayIndexOutOfBoundsException e) {
-                player.sendMessage("Please specify home as such: '/home (NameOfHome)'");
-            }            
+            String home = args.length == 0 ? "default" : args[0];
+            h.setHome(player, home);
         } else {
             sender.sendMessage("Command must be executed by a player.");
         }
